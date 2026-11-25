@@ -16,3 +16,26 @@ def test_empty_text_has_no_division_by_zero():
 
 def test_report_full():
     assert build_report(TEXT)[3] == "Найдовше слово: analysis"
+
+
+def test_report_short_has_two_lines():
+    assert build_report(TEXT, "short") == ["Слів: 13", "Речень: 3"]
+
+
+def test_unknown_mode_is_rejected():
+    import pytest
+    with pytest.raises(ValueError):
+        build_report(TEXT, "huge")
+
+
+def test_save_report(tmp_path):
+    from text_analyzer import save_report
+    target = tmp_path / "r.txt"
+    save_report(["a", "b"], str(target))
+    assert target.read_text(encoding="utf-8") == "a\nb"
+
+
+def test_save_report_bad_path_does_not_crash(capsys):
+    from text_analyzer import save_report
+    save_report(["a"], "/nonexistent-dir/r.txt")
+    assert "Не вдалося зберегти звіт" in capsys.readouterr().out
