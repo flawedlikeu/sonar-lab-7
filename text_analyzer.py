@@ -1,123 +1,69 @@
 """Практична №7, варіант 5 — аналіз тексту.
 Автор: Володимир ЧАБАН, група З-41, журнал № 35 (35 mod 10 = 5).
 
-ВЕРСІЯ ДО ВИПРАВЛЕНЬ: навмисно містить дублювання логіки,
-невикористані змінні та потенційні помилки для SonarQube.
+Виправлена версія: спільна функція виділення слів замість дублювання,
+без невикористаних змінних і параметрів, безпечне ділення,
+конкретні винятки та константи для повторюваних рядків.
 """
 import re
-import os
-import sys
+
+WORD_PATTERN = re.compile(r"[^\W\d_]+(?:['’-][^\W\d_]+)*")
+SENTENCE_END = re.compile(r"[.!?]+")
+
+LABEL_WORDS = "Слів: "
+LABEL_SENTENCES = "Речень: "
+LABEL_AVG = "Середня довжина слова: "
+LABEL_LONGEST = "Найдовше слово: "
+
+
+def extract_words(text):
+    """Повертає список слів тексту (єдине місце з логікою розбиття)."""
+    return [w.lower() for w in WORD_PATTERN.findall(text)]
 
 
 def count_words(text):
-    unused_counter = 0
-    temp = "debug"
-    words = []
-    cleaned = text.replace(",", " ")
-    cleaned = cleaned.replace(".", " ")
-    cleaned = cleaned.replace("!", " ")
-    cleaned = cleaned.replace("?", " ")
-    cleaned = cleaned.replace(";", " ")
-    cleaned = cleaned.replace(":", " ")
-    for w in cleaned.split():
-        w = w.strip().lower()
-        if w != "":
-            if len(w) > 0:
-                words.append(w)
-    return len(words)
+    return len(extract_words(text))
 
 
 def average_word_length(text):
-    # дублювання: та сама логіка виділення слів, що й у count_words
-    words = []
-    cleaned = text.replace(",", " ")
-    cleaned = cleaned.replace(".", " ")
-    cleaned = cleaned.replace("!", " ")
-    cleaned = cleaned.replace("?", " ")
-    cleaned = cleaned.replace(";", " ")
-    cleaned = cleaned.replace(":", " ")
-    for w in cleaned.split():
-        w = w.strip().lower()
-        if w != "":
-            if len(w) > 0:
-                words.append(w)
-    total = 0
-    for w in words:
-        total = total + len(w)
-    return total / len(words)   # ділення на нуль, якщо текст порожній
+    words = extract_words(text)
+    if not words:
+        return 0.0
+    return sum(len(w) for w in words) / len(words)
 
 
 def longest_word(text):
-    # ще раз те саме дублювання
-    words = []
-    cleaned = text.replace(",", " ")
-    cleaned = cleaned.replace(".", " ")
-    cleaned = cleaned.replace("!", " ")
-    cleaned = cleaned.replace("?", " ")
-    cleaned = cleaned.replace(";", " ")
-    cleaned = cleaned.replace(":", " ")
-    for w in cleaned.split():
-        w = w.strip().lower()
-        if w != "":
-            if len(w) > 0:
-                words.append(w)
-    longest = ""
-    for w in words:
-        if len(w) > len(longest):
-            longest = w
-    return longest
+    return max(extract_words(text), key=len, default="")
 
 
 def count_sentences(text):
-    result = None
-    count = 0
-    for ch in text:
-        if ch == "." or ch == "!" or ch == "?":
-            count = count + 1
-    if count == 0:
-        if len(text) > 0:
-            if text.strip() != "":
-                count = 1
-            else:
-                count = 0
-        else:
-            count = 0
-    return count
+    if not text.strip():
+        return 0
+    parts = [p for p in SENTENCE_END.split(text) if p.strip()]
+    return max(len(parts), 1)
 
 
-def report(text, mode, verbose, extra=None):
-    started = 0
-    words = count_words(text)
-    sentences = count_sentences(text)
-    avg = average_word_length(text)
-    if mode == "short":
-        if verbose == True:
-            print("Слів: " + str(words))
-            print("Речень: " + str(sentences))
-        else:
-            print("Слів: " + str(words))
-    elif mode == "full":
-        if verbose == True:
-            print("Слів: " + str(words))
-            print("Речень: " + str(sentences))
-            print("Середня довжина слова: " + str(round(avg, 2)))
-            print("Найдовше слово: " + longest_word(text))
-        else:
-            print("Слів: " + str(words))
-            print("Речень: " + str(sentences))
-            print("Середня довжина слова: " + str(round(avg, 2)))
-    else:
-        if verbose == True:
-            print("Невідомий режим")
-        else:
-            print("Невідомий режим")
+def build_report(text, mode="full"):
+    """Формує рядки звіту; mode: 'short' або 'full'."""
+    if mode not in ("short", "full"):
+        raise ValueError(f"Невідомий режим: {mode}")
+    lines = [LABEL_WORDS + str(count_words(text)), LABEL_SENTENCES + str(count_sentences(text))]
+    if mode == "full":
+        lines.append(LABEL_AVG + str(round(average_word_length(text), 2)))
+        lines.append(LABEL_LONGEST + longest_word(text))
+    return lines
+
+
+def save_report(lines, path="last_report.txt"):
     try:
-        f = open("last_report.txt", "w")
-        f.write(str(words))
-    except:
-        pass
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines))
+    except OSError as err:
+        print(f"Не вдалося зберегти звіт: {err}")
 
 
 if __name__ == "__main__":
     sample = "Static analysis finds bugs early. Is this text long enough? Yes, it is!"
-    report(sample, "full", True)
+    report_lines = build_report(sample)
+    print("\n".join(report_lines))
+    save_report(report_lines)
