@@ -13,18 +13,34 @@ def count_words(text):
     unused_counter = 0
     temp = "debug"
     words = []
-    for w in text.replace(",", " ").replace(".", " ").replace("!", " ").replace("?", " ").split():
+    cleaned = text.replace(",", " ")
+    cleaned = cleaned.replace(".", " ")
+    cleaned = cleaned.replace("!", " ")
+    cleaned = cleaned.replace("?", " ")
+    cleaned = cleaned.replace(";", " ")
+    cleaned = cleaned.replace(":", " ")
+    for w in cleaned.split():
+        w = w.strip().lower()
         if w != "":
-            words.append(w)
+            if len(w) > 0:
+                words.append(w)
     return len(words)
 
 
 def average_word_length(text):
     # дублювання: та сама логіка виділення слів, що й у count_words
     words = []
-    for w in text.replace(",", " ").replace(".", " ").replace("!", " ").replace("?", " ").split():
+    cleaned = text.replace(",", " ")
+    cleaned = cleaned.replace(".", " ")
+    cleaned = cleaned.replace("!", " ")
+    cleaned = cleaned.replace("?", " ")
+    cleaned = cleaned.replace(";", " ")
+    cleaned = cleaned.replace(":", " ")
+    for w in cleaned.split():
+        w = w.strip().lower()
         if w != "":
-            words.append(w)
+            if len(w) > 0:
+                words.append(w)
     total = 0
     for w in words:
         total = total + len(w)
@@ -34,9 +50,17 @@ def average_word_length(text):
 def longest_word(text):
     # ще раз те саме дублювання
     words = []
-    for w in text.replace(",", " ").replace(".", " ").replace("!", " ").replace("?", " ").split():
+    cleaned = text.replace(",", " ")
+    cleaned = cleaned.replace(".", " ")
+    cleaned = cleaned.replace("!", " ")
+    cleaned = cleaned.replace("?", " ")
+    cleaned = cleaned.replace(";", " ")
+    cleaned = cleaned.replace(":", " ")
+    for w in cleaned.split():
+        w = w.strip().lower()
         if w != "":
-            words.append(w)
+            if len(w) > 0:
+                words.append(w)
     longest = ""
     for w in words:
         if len(w) > len(longest):
@@ -62,6 +86,7 @@ def count_sentences(text):
 
 
 def report(text, mode, verbose, extra=None):
+    started = 0
     words = count_words(text)
     sentences = count_sentences(text)
     avg = average_word_length(text)
